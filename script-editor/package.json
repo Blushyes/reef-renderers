@@ -1,0 +1,17 @@
+{
+  "name": "reef-script-editor-renderer",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --format=iife --platform=browser --target=es2022 --minify --loader:.css=text --outfile=script-editor.min.js && cp node_modules/@lingjingai/script-editor/dist/paper-fibers.png paper-fibers.png",
+    "install:renderer": "node install.mjs"
+  },
+  "dependencies": {
+    "@lingjingai/script-editor": "0.7.16",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}

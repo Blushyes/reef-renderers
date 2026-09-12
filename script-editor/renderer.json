@@ -1,0 +1,18 @@
+{
+  "id": "lingjing.script-editor",
+  "name": "LingJing Script Editor",
+  "priority": 100,
+  "capabilities": [
+    "interactiveHtml"
+  ],
+  "assetRoot": "{rendererRoot}",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "{rendererRoot}/renderer.mjs"
+  ],
+  "match": {
+    "detectedKinds": [
+      "structuredData"
+    ]
+  }
+}
