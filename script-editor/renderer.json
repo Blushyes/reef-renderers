@@ -3,7 +3,9 @@
   "name": "LingJing Script Editor",
   "priority": 100,
   "capabilities": [
-    "interactiveHtml"
+    "interactiveHtml",
+    "localResources",
+    "documentActions"
   ],
   "assetRoot": "{rendererRoot}",
   "command": [

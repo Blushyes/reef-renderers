@@ -1,29 +1,45 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { associateSourceVideo, loadVideoSource } from "./video-source.mjs";
 
 const input = JSON.parse(await readStdin());
-const project = scriptProject(input.body?.kind === "structuredData" ? input.body.source : null);
+let project = scriptProject(input.body?.kind === "structuredData" ? input.body.source : null);
 if (project === null) {
   process.stdout.write(JSON.stringify({ kind: "notApplicable" }));
   process.exit(0);
 }
 
+let media = { videos: [], resources: [], warning: null };
+let mediaError = null;
+if (input.interaction) {
+  const associated = await associateSourceVideo(input, project);
+  project = associated.project;
+  media = associated.media;
+} else if (project.sourceVideo !== undefined) {
+  try {
+    media = await loadVideoSource(project.sourceVideo, project.episodes.length);
+  } catch (error) {
+    // A missing source directory must remain repairable from the script preview.
+    mediaError = error.message;
+  }
+}
 const rendererDirectory = path.dirname(fileURLToPath(import.meta.url));
 const script = await readFile(path.join(rendererDirectory, "script-editor.min.js"), "utf8");
-const encodedSource = Buffer.from(JSON.stringify(project), "utf8").toString("base64");
+const encodedSource = Buffer.from(JSON.stringify({ project, videos: media.videos, warning: media.warning, error: mediaError }), "utf8").toString("base64");
 
 process.stdout.write(JSON.stringify({
   kind: "interactiveHtml",
+  resources: media.resources,
   html: `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: file:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: file:; media-src reef-resource:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style>
   <script>
     const bytes = Uint8Array.from(atob("${encodedSource}"), character => character.charCodeAt(0));
-    window.reefScriptProject = JSON.parse(new TextDecoder().decode(bytes));
+    window.reefScriptPreview = JSON.parse(new TextDecoder().decode(bytes));
     window.reefScriptEditorDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   </script>
 </head>
