@@ -8,7 +8,17 @@ npm run build
 npm run install:renderer
 ```
 
-The install step copies the self-contained renderer to `~/Library/Application Support/Reef/renderers/` and registers its manifest there.
+Requires Node.js available in the user's zsh terminal (`command -v node`). The
+launcher resolves Node through an interactive login zsh, including nvm setup in
+`.zshrc`, so Finder-launched ReefMac can use it without a fixed installation path.
+Shell startup output is kept separate from the renderer's JSON protocol.
+
+The install step copies the renderer to `~/Library/Application Support/Reef/renderers/` and registers its manifest there.
+
+To distribute the renderer, ZIP a folder containing `renderer.json`, `launch.sh`,
+`renderer.mjs`, `video-source.mjs`, `script-editor.min.js`, and `paper-fibers.png`.
+Recipients remove the previous renderer in ReefMac Settings, then import this
+folder. The launcher works with the existing ReefMac renderer protocol.
 
 ## Source video
 

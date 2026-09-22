@@ -9,7 +9,8 @@
   ],
   "assetRoot": "{rendererRoot}",
   "command": [
-    "/opt/homebrew/bin/node",
+    "/bin/sh",
+    "{rendererRoot}/launch.sh",
     "{rendererRoot}/renderer.mjs"
   ],
   "match": {

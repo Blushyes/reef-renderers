@@ -8,6 +8,6 @@ const rendererDirectory = path.join(
   os.homedir(), "Library", "Application Support", "Reef", "renderers", "lingjing.script-editor"
 );
 await mkdir(rendererDirectory, { recursive: true });
-for (const file of ["renderer.json", "renderer.mjs", "video-source.mjs", "script-editor.min.js", "paper-fibers.png"]) {
+for (const file of ["renderer.json", "launch.sh", "renderer.mjs", "video-source.mjs", "script-editor.min.js", "paper-fibers.png"]) {
   await copyFile(path.join(sourceDirectory, file), path.join(rendererDirectory, file));
 }
