@@ -1,24 +1,28 @@
 {
   "name": "reef-script-editor-renderer",
+  "version": "2026.10.27",
   "private": true,
-  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "build": "esbuild src/main.tsx --bundle --format=iife --platform=browser --target=es2022 --minify --loader:.css=text --outfile=script-editor.min.js && cp node_modules/@lingjingai/script-editor/dist/paper-fibers.png paper-fibers.png",
-    "install:renderer": "node install.mjs",
+    "build": "node scripts/build-translation.mjs && node scripts/build.mjs",
     "check": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "install:renderer": "node install.mjs"
   },
   "dependencies": {
-    "@lingjingai/script-editor": "0.7.16",
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "@lingjingai/script-editor": "0.9.2",
+    "@base-ui/react": "1.7.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^22.20.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "esbuild": "0.25.10",
-    "typescript": "^7.0.2"
-  },
-  "type": "module"
+    "esbuild": "0.27.7",
+    "typescript": "5.7.3",
+    "@types/node": "26.1.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
 }

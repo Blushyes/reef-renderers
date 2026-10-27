@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { associateSourceVideo, loadVideoSource } from "./video-source.mjs";
 
 const input = JSON.parse(await readStdin());
@@ -25,8 +26,10 @@ if (input.interaction) {
   }
 }
 const rendererDirectory = path.dirname(fileURLToPath(import.meta.url));
+const serviceUrl = await startService({ project, scriptPath: input.source?.localFileAvailable ? input.source.localPath : undefined, rendererDirectory });
 const script = await readFile(path.join(rendererDirectory, "script-editor.min.js"), "utf8");
-const encodedSource = Buffer.from(JSON.stringify({ project, videos: media.videos, warning: media.warning, error: mediaError }), "utf8").toString("base64");
+const encodedSource = Buffer.from(JSON.stringify({ project, videos: media.videos, warning: media.warning, error: mediaError, serviceUrl, canAssociate: Boolean(input.source?.localFileAvailable && input.source.localPath) }), "utf8").toString("base64");
+const serviceOrigin = new URL(serviceUrl).origin;
 
 process.stdout.write(JSON.stringify({
   kind: "interactiveHtml",
@@ -35,7 +38,7 @@ process.stdout.write(JSON.stringify({
 <html>
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: file:; media-src reef-resource:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: file: ${serviceOrigin}; media-src reef-resource: ${serviceOrigin}; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src ${serviceOrigin}; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style>
   <script>
     const bytes = Uint8Array.from(atob("${encodedSource}"), character => character.charCodeAt(0));
@@ -49,6 +52,27 @@ process.stdout.write(JSON.stringify({
 </body>
 </html>`
 }));
+
+async function startService(configuration) {
+  const child = spawn(process.execPath, [path.join(rendererDirectory, "service.mjs")], {
+    detached: true, stdio: ["pipe", "pipe", "ignore"],
+  });
+  child.stdin.end(JSON.stringify(configuration));
+  return await new Promise((resolve, reject) => {
+    let output = "";
+    const timer = setTimeout(() => { child.kill(); reject(new Error("本地阅读服务启动超时")); }, 10_000);
+    child.once("error", (error) => { clearTimeout(timer); reject(error); });
+    child.once("exit", (code) => { clearTimeout(timer); reject(new Error(`本地阅读服务退出：${code}`)); });
+    child.stdout.on("data", (chunk) => {
+      output += chunk;
+      if (!output.includes("\n")) return;
+      clearTimeout(timer);
+      child.stdout.destroy();
+      child.unref();
+      resolve(output.trim());
+    });
+  });
+}
 
 async function readStdin() {
   const chunks = [];

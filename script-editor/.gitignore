@@ -1,1 +1,5 @@
 node_modules/
+.native-build/
+.reef-build/
+*.zip
+.DS_Store
